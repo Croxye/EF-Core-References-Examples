@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
 
@@ -79,9 +79,11 @@ class Blog
 
     public ICollection<Post> Posts { get; set; }
 }
+
 class Post
 {
     public int Id { get; set; }
+
     //public int BlogId { get; set; }
     public string Title { get; set; }
     public string BlogUrl { get; set; }
@@ -91,38 +93,34 @@ class Post
     public Blog Blog { get; set; }
 }
 
-
 class ApplicationDbContext : DbContext
 {
     public DbSet<Blog> Blogs { get; set; }
     public DbSet<Post> Posts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //modelBuilder.Entity<Blog>()
-        //    .HasKey(b => b.Id)
-        //    .HasName("ornek");
-        //modelBuilder.Entity<Blog>()
-        //    .HasAlternateKey(b => new { b.Url, b.BlogName });
-        //modelBuilder.Entity<Blog>()
-        //    .Property<int>("BlogForeignKeyId");
+        modelBuilder.Entity<Blog>().HasKey(b => b.Id).HasName("ornek");
+        modelBuilder.Entity<Blog>().HasAlternateKey(b => new { b.Url, b.BlogName });
+        modelBuilder.Entity<Blog>().Property<int>("BlogForeignKeyId");
 
-        //modelBuilder.Entity<Blog>()
-        //    .HasMany(b => b.Posts)
-        //    .WithOne(b => b.Blog)
-        //    .HasForeignKey("BlogForeignKeyId")
-        //    .HasConstraintName("ornekforeignkey");
+        modelBuilder
+            .Entity<Blog>()
+            .HasMany(b => b.Posts)
+            .WithOne(b => b.Blog)
+            .HasForeignKey("BlogForeignKeyId")
+            .HasConstraintName("ornekforeignkey");
 
-        //modelBuilder.Entity<Blog>()
-        //    .HasIndex(b => b.Url)
-        //    .IsUnique();
-        //modelBuilder.Entity<Blog>()
-        //    .HasAlternateKey(b => b.Url);
+        modelBuilder.Entity<Blog>().HasIndex(b => b.Url).IsUnique();
+        modelBuilder.Entity<Blog>().HasAlternateKey(b => b.Url);
 
-        modelBuilder.Entity<Post>()
-            .HasCheckConstraint("a_b_check_const", "[A] > [B]");
+        modelBuilder.Entity<Post>().HasCheckConstraint("a_b_check_const", "[A] > [B]");
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }

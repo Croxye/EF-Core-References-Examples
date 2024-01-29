@@ -6,7 +6,7 @@ ApplicationDbContext context = new();
 //Index, bir sütuna dayalı sorgulamaları daha verimli ve performanslı hale getirmek için kullanılan yapıdır.
 #endregion
 #region Index'leme Nasıl Yapılır?
-//PK, FK ve AK olan kolonlar otomatik olarak indexlenir. 
+//PK, FK ve AK olan kolonlar otomatik olarak indexlenir.
 
 #region Index Attribute'u
 
@@ -71,6 +71,7 @@ class Employee
 class ApplicationDbContext : DbContext
 {
     public DbSet<Employee> Employees { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         //modelBuilder.Entity<Employee>()
@@ -80,28 +81,27 @@ class ApplicationDbContext : DbContext
         //.HasIndex(x => x.Name)
         //.IsUnique();
 
-        //modelBuilder.Entity<Employee>()
-        //    .HasIndex(x => x.Name)
-        //    .IsDescending();
+        modelBuilder.Entity<Employee>().HasIndex(x => x.Name).IsDescending();
 
-        //modelBuilder.Entity<Employee>()
-        //    .HasIndex(x => new { x.Name, x.Surname })
-        //    .IsDescending(true, false);
+        modelBuilder
+            .Entity<Employee>()
+            .HasIndex(x => new { x.Name, x.Surname })
+            .IsDescending(true, false);
 
-        //modelBuilder.Entity<Employee>()
-        //    .HasIndex(x => x.Name)
-        //    .HasDatabaseName("name_index");
+        modelBuilder.Entity<Employee>().HasIndex(x => x.Name).HasDatabaseName("name_index");
 
-        //modelBuilder.Entity<Employee>()
-        //    .HasIndex(x => x.Name)
-        //    .HasFilter("[NAME] IS NOT NULL");
+        modelBuilder.Entity<Employee>().HasIndex(x => x.Name).HasFilter("[NAME] IS NOT NULL");
 
-        modelBuilder.Entity<Employee>()
+        modelBuilder
+            .Entity<Employee>()
             .HasIndex(x => new { x.Name, x.Surname })
             .IncludeProperties(x => x.Salary);
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }

@@ -37,6 +37,7 @@ class Post
 
     public Blog Blog { get; set; }
 }
+
 class Blog
 {
     public int Id { get; set; }
@@ -44,6 +45,7 @@ class Blog
 
     public ICollection<Post> Posts { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Post> Posts { get; set; }
@@ -51,22 +53,44 @@ class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
-        modelBuilder.Entity<Post>()
+        modelBuilder
+            .Entity<Post>()
             .HasData(
-                new Post() { Id = 1, BlogId = 1, Title = "A", Content = "..." },
-                new Post() { Id = 2, BlogId = 1, Title = "B", Content = "..." },
-                new Post() { Id = 5, BlogId = 2, Title = "B", Content = "..." }
+                new Post()
+                {
+                    Id = 1,
+                    BlogId = 1,
+                    Title = "A",
+                    Content = "..."
+                },
+                new Post()
+                {
+                    Id = 2,
+                    BlogId = 1,
+                    Title = "B",
+                    Content = "..."
+                },
+                new Post()
+                {
+                    Id = 5,
+                    BlogId = 2,
+                    Title = "B",
+                    Content = "..."
+                }
             );
 
-        modelBuilder.Entity<Blog>()
+        modelBuilder
+            .Entity<Blog>()
             .HasData(
                 new Blog() { Id = 11, Url = "www.gencayyildiz.com/blog" },
                 new Blog() { Id = 2, Url = "www.bilmemne.com/blog" }
             );
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDb;User ID=SA;Password=1q2w3e4r+!");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDb;User ID=SA;Password=1q2w3e4r+!"
+        );
     }
 }
