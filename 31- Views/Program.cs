@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
 #region View Nedir?
@@ -19,18 +19,17 @@ ApplicationDbContext context = new();
 
 #endregion
 
-//var personOrders = await context.PersonOrders
-//    .Where(po => po.Count > 10)
-//    .ToListAsync();
+var personOrders = await context.PersonOrders.Where(po => po.Count > 10).ToListAsync();
 
 #region EF Core'da View'lerin Özellikleri
 //Viewlerde primary key olmaz! Bu yüzden ilgili DbSet'in HasNoKey ile işaretlenmesi gerekemktedir.
 //View neticesinde gelen veriler Change Tracker ile takip edilmezler. Haliyle üzerlerinde yapılan değişiklikleri EF Core veritabanına yansıtmaz
 
-//var personOrder = await context.PersonOrders.FirstAsync();
-//personOrder.Name = "Abuzer";
-//await context.SaveChangesAsync();
+var personOrder = await context.PersonOrders.FirstAsync();
+personOrder.Name = "Abuzer";
+await context.SaveChangesAsync();
 #endregion
+
 Console.WriteLine();
 #endregion
 public class Person
@@ -40,6 +39,7 @@ public class Person
 
     public ICollection<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -48,31 +48,36 @@ public class Order
 
     public Person Person { get; set; }
 }
+
 public class PersonOrder
 {
     public string Name { get; set; }
     public int Count { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<PersonOrder> PersonOrders { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        modelBuilder.Entity<PersonOrder>()
-            .ToView("vm_PersonOrders")
-            .HasNoKey();
+        modelBuilder.Entity<PersonOrder>().ToView("vm_PersonOrders").HasNoKey();
 
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Orders)
             .WithOne(o => o.Person)
             .HasForeignKey(o => o.PersonId);
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }
