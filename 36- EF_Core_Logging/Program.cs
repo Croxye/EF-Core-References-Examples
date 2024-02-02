@@ -1,9 +1,8 @@
-﻿
-using System.Collections.Generic;
-using System.Reflection.Emit;
-using System.Reflection;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Emit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 ApplicationDbContext context = new();
@@ -29,7 +28,7 @@ var datas = await context.Persons.ToListAsync();
 
 #endregion
 #region Hassas Verilerin Loglanması - EnableSensitiveDataLogging
-//Default olarak EF Core log mesajlarında herhangi bir verinin değerini içermemektedir. Bunun nedeni, gizlilik teşkil edebilecek verilerin loglama sürecinde yanlışlıklada olsa açığa çıkmamasıdır. 
+//Default olarak EF Core log mesajlarında herhangi bir verinin değerini içermemektedir. Bunun nedeni, gizlilik teşkil edebilecek verilerin loglama sürecinde yanlışlıklada olsa açığa çıkmamasıdır.
 //Bazen alınan hatalarda verinin değerini bilmek hatayı debug edebilmek için oldukça yardımcı olabilmektedir. Bu durumda hassas verilerinde loglamasını sağlayabiliriz.
 #endregion
 #region Exception Ayrıntısını Loglama - EnableDetailedErrors
@@ -46,6 +45,7 @@ public class Person
 
     public ICollection<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -55,27 +55,35 @@ public class Order
 
     public Person Person { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Orders)
             .WithOne(o => o.Person)
             .HasForeignKey(o => o.PersonId);
     }
+
     StreamWriter _log = new("logs.txt", append: true);
+
     protected override async void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
 
         //optionsBuilder.LogTo(Console.WriteLine);
         //optionsBuilder.LogTo(message => Debug.WriteLine(message));
-        optionsBuilder.LogTo(async message => await _log.WriteLineAsync(message),LogLevel.Information)
+        optionsBuilder
+            .LogTo(async message => await _log.WriteLineAsync(message), LogLevel.Information)
             .EnableSensitiveDataLogging()
             .EnableDetailedErrors();
         //optionsBuilder.LogTo(message => _log.WriteLine(message));

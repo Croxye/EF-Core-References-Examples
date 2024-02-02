@@ -1,8 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
-
 
 #region Keyless Entity Types
 //Normal entity type'lara ek olarak primary key içermeyen querylere karşı veritabanı sorguları yürütmek için kullanılan bir özelliktir KET.
@@ -36,6 +35,7 @@ public class PersonOrderCount
     public string Name { get; set; }
     public int Count { get; set; }
 }
+
 public class Person
 {
     public int PersonId { get; set; }
@@ -43,6 +43,7 @@ public class Person
 
     public ICollection<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -52,27 +53,30 @@ public class Order
 
     public Person Person { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<PersonOrderCount> PersonOrderCounts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Orders)
             .WithOne(o => o.Person)
             .HasForeignKey(o => o.PersonId);
 
-        modelBuilder.Entity<PersonOrderCount>()
-            .HasNoKey()
-            .ToView("vw_PersonOrderCount");
+        modelBuilder.Entity<PersonOrderCount>().HasNoKey().ToView("vw_PersonOrderCount");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }

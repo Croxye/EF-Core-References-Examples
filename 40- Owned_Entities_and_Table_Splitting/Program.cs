@@ -15,7 +15,7 @@ ApplicationDbContext context = new();
 #region Owned Entity Types Nasıl Uygulanır?
 //Normal bir entity'de farklı sınıfların referans edilmesi primary key vs. gibi hatalara sebebiyet verecektir. Çünkü direkt bir sınfıın referans olarak alınması ef core tarafından ilişkisel bir tasarım olarak algılanır. Bizlerin entity ieçrisindeki propertyleri kümesel olarak barındıran sınıfları o entity'nin bir parçası olduğunu bildirmemiz özellikle gerekmektedir.
 
-#region OwnsOne Metodu 
+#region OwnsOne Metodu
 
 #endregion
 #region Owned Attribute'u
@@ -29,8 +29,8 @@ ApplicationDbContext context = new();
 //OwnsMany metodu, entity'nin farklı özelliklerine başka bir sınıftan ICollection türünde Navigation Property aracılığıyla ilişkisel olarak erişebilmemizi sağlayan bir işleve sahiptir.
 //Normalde Has ilişki olarak kurulabilecek bu ilişkinin temel farkı, Has ilişkisi DbSet property'si gerektirirken, OwnsMany metodu ise DbSet'e ihtiyaç duymaksızın gerçekleştirmemizi sağlamaktadır.
 
-//var d = await context.Employees.ToListAsync();
-//Console.WriteLine();
+var d = await context.Employees.ToListAsync();
+Console.WriteLine();
 #endregion
 #endregion
 #region İç İçe Owned Entity Types
@@ -43,11 +43,6 @@ ApplicationDbContext context = new();
 class Employee
 {
     public int Id { get; set; }
-    //public string Name { get; set; }
-    //public string MiddleName { get; set; }
-    //public string LastName { get; set; }
-    //public string StreetAddress { get; set; }
-    //public string Location { get; set; }
     public bool IsActive { get; set; }
 
     public EmployeeName EmployeeName { get; set; }
@@ -55,11 +50,13 @@ class Employee
 
     public ICollection<Order> Orders { get; set; }
 }
+
 class Order
 {
     public string OrderDate { get; set; }
     public int Price { get; set; }
 }
+
 //[Owned]
 class EmployeeName
 {
@@ -75,37 +72,54 @@ class EmployeBilmemneName
     public int Y { get; set; }
     public int Z { get; set; }
 }
+
 //[Owned]
 class Address
 {
     public string StreetAddress { get; set; }
     public string Location { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Employee> Employees { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region OwnsOne
-        //modelBuilder.Entity<Employee>().OwnsOne(e => e.EmployeeName, builder =>
-        //{
-        //    builder.Property(e => e.Name).HasColumnName("Name");
-        //});
-        //modelBuilder.Entity<Employee>().OwnsOne(e => e.Adress);
+        modelBuilder
+            .Entity<Employee>()
+            .OwnsOne(
+                e => e.EmployeeName,
+                builder =>
+                {
+                    builder.Property(e => e.Name).HasColumnName("Name");
+                }
+            );
+        modelBuilder.Entity<Employee>().OwnsOne(e => e.Adress);
         #endregion
+
         #region OwnsMany
-        modelBuilder.Entity<Employee>().OwnsMany(e => e.Orders, builder =>
-        {
-            builder.WithOwner().HasForeignKey("OwnedEmployeeId");
-            builder.Property<int>("Id");
-            builder.HasKey("Id");
-        });
+        modelBuilder
+            .Entity<Employee>()
+            .OwnsMany(
+                e => e.Orders,
+                builder =>
+                {
+                    builder.WithOwner().HasForeignKey("OwnedEmployeeId");
+                    builder.Property<int>("Id");
+                    builder.HasKey("Id");
+                }
+            );
         #endregion
         modelBuilder.ApplyConfiguration(new EmployeeConfiguration());
     }
+
     protected override async void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }
 
@@ -113,10 +127,13 @@ class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
     public void Configure(EntityTypeBuilder<Employee> builder)
     {
-        builder.OwnsOne(e => e.EmployeeName, builder =>
-        {
-            builder.Property(e => e.Name).HasColumnName("Name");
-        });
+        builder.OwnsOne(
+            e => e.EmployeeName,
+            builder =>
+            {
+                builder.Property(e => e.Name).HasColumnName("Name");
+            }
+        );
         builder.OwnsOne(e => e.Adress);
     }
 }

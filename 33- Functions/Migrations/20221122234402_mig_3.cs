@@ -10,18 +10,20 @@ namespace Functions.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql($@"
+            migrationBuilder.Sql(
+                $@"
                 CREATE FUNCTION bestSellingStaff(@totalOrderPrice INT = 10000)
 	                RETURNS TABLE
                 AS
-                RETURN 
+                RETURN
                 SELECT TOP 1 p.Name, COUNT(*) OrderCount, SUM(o.Price) TotalOrderPrice FROM Persons p
                 JOIN Orders o
 	                ON p.PersonId = o.PersonId
                 GROUP By p.Name
                 HAVING SUM(o.Price) < @totalOrderPrice
                 ORDER By OrderCount DESC
-                    ");
+                    "
+            );
         }
 
         /// <inheritdoc />

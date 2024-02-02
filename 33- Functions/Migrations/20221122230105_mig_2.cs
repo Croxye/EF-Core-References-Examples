@@ -10,7 +10,8 @@ namespace Functions.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql($@"
+            migrationBuilder.Sql(
+                $@"
                     CREATE FUNCTION getPersonTotalOrderPrice(@personId INT)
 	                    RETURNS INT
                     AS
@@ -22,7 +23,8 @@ namespace Functions.Migrations
 	                    WHERE p.PersonId = @personId
 	                    RETURN @totalPrice
                     END
-                    ");
+                    "
+            );
         }
 
         /// <inheritdoc />

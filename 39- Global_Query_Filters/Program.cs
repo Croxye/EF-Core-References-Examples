@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+﻿using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
 
@@ -16,21 +16,23 @@ ApplicationDbContext context = new();
 //await context.Persons.FirstOrDefaultAsync(p => p.Name.Contains("a") || p.PersonId == 3);
 #endregion
 #region Navigation Property Üzerinde Global Query Filters Kullanımı
-//var p1 = await context.Persons
-//    .AsNoTracking()
-//    .Include(p => p.Orders)
-//    .Where(p => p.Orders.Count > 0)
-//    .ToListAsync();
+var p1 = await context
+    .Persons.AsNoTracking()
+    .Include(p => p.Orders)
+    .Where(p => p.Orders.Count > 0)
+    .ToListAsync();
 
-//var p2 = await context.Persons.AsNoTracking().ToListAsync();
-//Console.WriteLine();
+var p2 = await context.Persons.AsNoTracking().ToListAsync();
+Console.WriteLine();
 #endregion
+
 #region Global Query Filters Nasıl Ignore Edilir? - IgnoreQueryFilters
-//var person1 = await context.Persons.ToListAsync();
-//var person2 = await context.Persons.IgnoreQueryFilters().ToListAsync();
+var person1 = await context.Persons.ToListAsync();
+var person2 = await context.Persons.IgnoreQueryFilters().ToListAsync();
 
-//Console.WriteLine();
+Console.WriteLine();
 #endregion
+
 #region Dikkat Edilmesi Gereken Husus!
 //Global Query Filter uygulanmış bir kolona farkında olmaksızın şart uygulanabilmektedir. Bu duruma dikkat edilmelidir.
 
@@ -45,6 +47,7 @@ public class Person
 
     public List<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -54,10 +57,12 @@ public class Order
 
     public Person Person { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
@@ -68,6 +73,8 @@ class ApplicationDbContext : DbContext
 
     protected override async void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }
