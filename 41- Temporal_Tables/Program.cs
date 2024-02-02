@@ -26,22 +26,53 @@ ApplicationDbContext context = new();
 
 #region Veri Eklerken
 //Temporal Table'a veri ekleme süreçlerinde herhangi bir kayıt atılmaz! Temporal Table'ın yapısı, var olan veirler üzerindeki zamansal değişimleri takip etmek üzerine kuruludur!
-// var persons = new List<Person>() {
-//    new(){ Name = "Gençay", Surname = "Yıldız", BirthDate = DateTime.UtcNow },
-//    new(){ Name = "Mustafa", Surname = "Yıldız", BirthDate = DateTime.UtcNow },
-//    new(){ Name = "Suzan", Surname = "Yıldız", BirthDate = DateTime.UtcNow },
-//    new(){ Name = "Yarkın", Surname = "Yıldız", BirthDate = DateTime.UtcNow },
-//    new(){ Name = "Şuayip", Surname = "Yıldız", BirthDate = DateTime.UtcNow },
-//    new(){ Name = "Sebahattin", Surname = "Yıldız", BirthDate = DateTime.UtcNow }
-// };
+var persons = new List<Person>()
+{
+    new()
+    {
+        Name = "Gençay",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    },
+    new()
+    {
+        Name = "Mustafa",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    },
+    new()
+    {
+        Name = "Suzan",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    },
+    new()
+    {
+        Name = "Yarkın",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    },
+    new()
+    {
+        Name = "Şuayip",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    },
+    new()
+    {
+        Name = "Sebahattin",
+        Surname = "Yıldız",
+        BirthDate = DateTime.UtcNow
+    }
+};
 
 //await context.Persons.AddRangeAsync(persons);
 //await context.SaveChangesAsync();
 #endregion
 #region Veri Güncellerken
-//var person = await context.Persons.FindAsync(3);
-//person.Name = "Ahmet";
-//await context.SaveChangesAsync();
+var person = await context.Persons.FindAsync(3);
+person.Name = "Ahmet";
+await context.SaveChangesAsync();
 #endregion
 #region Veri Silerken
 //var person = await context.Persons.FindAsync(3);
@@ -53,93 +84,136 @@ ApplicationDbContext context = new();
 
 #region TemporalAsOf
 //Belirli bir zaman için değişikiğe uğrayan tüm öğeleri döndüren bir fonksiyondur.
-//var datas = await context.Persons.TemporalAsOf(new DateTime(2022, 12, 09, 05, 30, 04)).Select(p => new
-//{
-//    p.Id,
-//    p.Name,
-//    PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
-//    PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
-//}).ToListAsync();
+var datas = await context
+    .Persons.TemporalAsOf(new DateTime(2022, 12, 09, 05, 30, 04))
+    .Select(
+        p =>
+            new
+            {
+                p.Id,
+                p.Name,
+                PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
+            }
+    )
+    .ToListAsync();
 
-//foreach (var data in datas)
-//{
-//    Console.WriteLine(data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd);
-//}
+foreach (var data in datas)
+{
+    Console.WriteLine(
+        data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd
+    );
+}
 #endregion
 #region TemporalAll
 //Güncellenmiş yahut silinmiş olan tüm verilerin geçmiş sürümlerini veya geçerli durumlarını döndüren bir fonksiyondur.
-//var datas = await context.Persons.TemporalAll().Select(p => new
-//{
-//    p.Id,
-//    p.Name,
-//    PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
-//    PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
-//}).ToListAsync();
+var datas = await context
+    .Persons.TemporalAll()
+    .Select(
+        p =>
+            new
+            {
+                p.Id,
+                p.Name,
+                PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
+            }
+    )
+    .ToListAsync();
 
-//foreach (var data in datas)
-//{
-//    Console.WriteLine(data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd);
-//}
+foreach (var data in datas)
+{
+    Console.WriteLine(
+        data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd
+    );
+}
 #endregion
 #region TemporalFromTo
 //Belirli bir zaman aralığı içerisindelki verileri döndüren fonksiyondur. Başlangıç ve bitiş zamanı dahil değildir.
-////Başlangıç : 2022-12-09 05:29:55.0953716
-//var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
-////Bitiş     : 2022-12-09 05:30:30.3459797
-//var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
+//Başlangıç : 2022-12-09 05:29:55.0953716
+var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
 
-//var datas = await context.Persons.TemporalFromTo(baslangic, bitis).Select(p => new
-//{
-//    p.Id,
-//    p.Name,
-//    PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
-//    PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
-//}).ToListAsync();
+//Bitiş     : 2022-12-09 05:30:30.3459797
+var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
 
-//foreach (var data in datas)
-//{
-//    Console.WriteLine(data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd);
-//}
+var datas = await context
+    .Persons.TemporalFromTo(baslangic, bitis)
+    .Select(
+        p =>
+            new
+            {
+                p.Id,
+                p.Name,
+                PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
+            }
+    )
+    .ToListAsync();
+
+foreach (var data in datas)
+{
+    Console.WriteLine(
+        data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd
+    );
+}
 #endregion
 #region TemporalBetween
-////Belirli bir zaman aralığı içerisindelki verileri döndüren fonksiyondur. Başlangıç verisi dahil değil ve bitiş zamanı ise dahildir.
-////Başlangıç : 2022-12-09 05:29:55.0953716
-//var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
-////Bitiş     : 2022-12-09 05:30:30.3459797
-//var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
+//Belirli bir zaman aralığı içerisindelki verileri döndüren fonksiyondur. Başlangıç verisi dahil değil ve bitiş zamanı ise dahildir.
+//Başlangıç : 2022-12-09 05:29:55.0953716
+var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
 
-//var datas = await context.Persons.TemporalBetween(baslangic, bitis).Select(p => new
-//{
-//    p.Id,
-//    p.Name,
-//    PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
-//    PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
-//}).ToListAsync();
+//Bitiş     : 2022-12-09 05:30:30.3459797
+var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
 
-//foreach (var data in datas)
-//{
-//    Console.WriteLine(data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd);
-//}
+var datas = await context
+    .Persons.TemporalBetween(baslangic, bitis)
+    .Select(
+        p =>
+            new
+            {
+                p.Id,
+                p.Name,
+                PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
+            }
+    )
+    .ToListAsync();
+
+foreach (var data in datas)
+{
+    Console.WriteLine(
+        data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd
+    );
+}
 #endregion
 #region TemporalContainedIn
-////Belirli bir zaman aralığı içerisindelki verileri döndüren fonksiyondur. Başlangıç ve bitiş zamanı ise dahildir.
-////Başlangıç : 2022-12-09 05:29:55.0953716
-//var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
-////Bitiş     : 2022-12-09 05:30:30.3459797
-//var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
+//Belirli bir zaman aralığı içerisindelki verileri döndüren fonksiyondur. Başlangıç ve bitiş zamanı ise dahildir.
+//Başlangıç : 2022-12-09 05:29:55.0953716
+var baslangic = new DateTime(2022, 12, 09, 05, 29, 55);
 
-//var datas = await context.Persons.TemporalContainedIn(baslangic, bitis).Select(p => new
-//{
-//    p.Id,
-//    p.Name,
-//    PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
-//    PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
-//}).ToListAsync();
+//Bitiş     : 2022-12-09 05:30:30.3459797
+var bitis = new DateTime(2022, 12, 09, 05, 30, 30);
 
-//foreach (var data in datas)
-//{
-//    Console.WriteLine(data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd);
-//}
+var datas = await context
+    .Persons.TemporalContainedIn(baslangic, bitis)
+    .Select(
+        p =>
+            new
+            {
+                p.Id,
+                p.Name,
+                PeriodStart = EF.Property<DateTime>(p, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(p, "PeriodEnd"),
+            }
+    )
+    .ToListAsync();
+
+foreach (var data in datas)
+{
+    Console.WriteLine(
+        data.Id + " " + data.Name + " | " + data.PeriodStart + " - " + data.PeriodEnd
+    );
+}
 #endregion
 #endregion
 #region Silinmiş Bir Veriyi Temporal Table'dan Geri Getirme

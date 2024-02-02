@@ -1,7 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
 ApplicationDbContext context = new();
 
 #region Data Concurrency Nedir?
@@ -34,19 +35,21 @@ ApplicationDbContext context = new();
 
 #endregion
 #region WITH (XLOCK)
-//using var transaction = await context.Database.BeginTransactionAsync();
-//var data = await context.Persons.FromSql($"SELECT * FROM Persons WITH (XLOCK) WHERE PersonID = 5")
-//    .ToListAsync();
-//Console.WriteLine();
-//await transaction.CommitAsync();
+using var transaction = await context.Database.BeginTransactionAsync();
+var data = await context
+    .Persons.FromSql($"SELECT * FROM Persons WITH (XLOCK) WHERE PersonID = 5")
+    .ToListAsync();
+Console.WriteLine();
+await transaction.CommitAsync();
 #endregion
 #endregion
+
 #region Optimistic Lock (İyimser Kilitmele)
 
 //Bir verinin stale olup olmadığını anlamak için herhangi bir locking işlemi olmaksızın versiyon mantığıonda çalışmamızı sağlayan yaklaşımdır.
-//Optimistic lock yönteminde, Pessimistic lock'da olduğu gibi veriler üzerinde tutarsızlığa mahal olabilecek değişiklikler fiziksel olarka engellenmemektedir. Yani veriler tutarsızlığı sağlayacak şekilde değiştirilebilir. 
+//Optimistic lock yönteminde, Pessimistic lock'da olduğu gibi veriler üzerinde tutarsızlığa mahal olabilecek değişiklikler fiziksel olarka engellenmemektedir. Yani veriler tutarsızlığı sağlayacak şekilde değiştirilebilir.
 //Amma velakin Optimistic lock yaklaşımı ile bu veriler üzerindeki tutarsızlık durumunu takip edebilmek için versiyon bilgisini kullanıyoruz. Bunu da şöyle kullanıyoruz;
-//Her bir veriye karşılık bir versiyon bilgisi üretiliyor. Bu bilgi ister metinsel istersekte sayısal olabilir. Bu versiyon bilgisi veri üzerinde yapılan her bir değişiklik neticesinde güncellenecektir. Dolayısıyla bu güncellemeyi daha kolay bir şekild egerçkeleştirebilmek için sayısal olmasını tercih ederiz. 
+//Her bir veriye karşılık bir versiyon bilgisi üretiliyor. Bu bilgi ister metinsel istersekte sayısal olabilir. Bu versiyon bilgisi veri üzerinde yapılan her bir değişiklik neticesinde güncellenecektir. Dolayısıyla bu güncellemeyi daha kolay bir şekild egerçkeleştirebilmek için sayısal olmasını tercih ederiz.
 //EF Core üzerinden verileri sorgularken ilgili verilerin versiyon bilgilerini de in-memory'e alıyoruz. Ardından veri üzerinde bir değişiklik yapılırsa eğer bu  inmemory'deki versiyon bilgisi ile verityabanındaki versiyon bilgisini karşılaştıroyruz. Eğer ki bu karşılaştırma doğrulanıyorsa yapılan aksiyon geçerli olacaktır, yok eğer doğrulanmıyorsa demek ki verinin değeri değişmiş anlamına gelecek yani bir tutarsızlık durumu olduğu anlaşılacaktır. İşte bu durumda bir hata fırlatılacak ve aksiyon gerçekleştirilmeyecektir.
 
 //EF Core Optimistic lock yaklaşımı için genetinde yapısal bir özellik barındırmaktadır.
@@ -54,30 +57,35 @@ ApplicationDbContext context = new();
 #region Property Based Configuration (ConcurrencyCheck Attribute)
 //Verisel tutarlılığın kontrol edilmek istendiği proeprtyler ConcurrencyCheck attribute'u ile işaretlenir. Bu işaretleme neticesinde her bir entity'nin instance'ı için in-memory'de bir token değeri üretilecektir. Üretilen bu token değeri alınan aksiyon süreçlerinde EF Core tarafından doğrulacnacak ve eğer ki herhangi bir değişiklik yoksa aksiyon başarıyla sonlandırılmış olacaktır. Yok eğer transaction sürecinde ilgili veri üzerinde(ConcurrencyCheck attribute ile işaretlenmiş propertylerde) herhangi  bir değişiklik durumu söz konusuysa o taktirde üretilen token'da değiştirilecek ve haliyle doğrulama sürecinde geçerli olmayacağı anlaşılacağı için veri tutarsızlığı durumu olduğu anlaşılacak ve hata fırlatılacaktır.
 
-//var person = await context.Persons.FindAsync(3);
-//context.Entry(person).State = EntityState.Modified;
-//await context.SaveChangesAsync();
+var person = await context.Persons.FindAsync(3);
+context.Entry(person).State = EntityState.Modified;
+await context.SaveChangesAsync();
 
 #endregion
+
 #region RowVersion Column
 //Bu yaklaşımda ise veritabanındaki her bir satıra karşılık versiyon bilgisi fiziksel olarka oluşturulmaktadır.
-//var person = await context.Persons.FindAsync(3);
-//context.Entry(person).State = EntityState.Modified;
-//await context.SaveChangesAsync();
+var person2 = await context.Persons.FindAsync(2);
+context.Entry(person).State = EntityState.Modified;
+await context.SaveChangesAsync();
 #endregion
 #endregion
 
 public class Person
 {
     public int PersonId { get; set; }
+
     //[ConcurrencyCheck]
     public string Name { get; set; }
+
     [Timestamp]
     public byte[] RowVersion { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
@@ -85,11 +93,15 @@ class ApplicationDbContext : DbContext
         //modelBuilder.Entity<Person>().Property(p => p.Name).IsConcurrencyToken();
         modelBuilder.Entity<Person>().Property(p => p.RowVersion).IsRowVersion();
     }
+
     readonly ILoggerFactory _loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True")
+        optionsBuilder
+            .UseSqlServer(
+                "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+            )
             .UseLoggerFactory(_loggerFactory);
     }
 }
