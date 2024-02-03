@@ -1,7 +1,6 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using System;
 using System.Reflection;
-using System;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
 
@@ -10,7 +9,7 @@ ApplicationDbContext context = new();
 //Dolayısıyla özellikle gerçek uygulamalarda in-memory database'i kullanıyorsanız bunun kalıcı değil geçici yani silinebilir bir özellik olduğunu UNUTMAYIN!
 
 #region EF Core'da In-Memory Database İle Çalışmanın Gereği Nedir?
-//Ben deniz(Gençay) genellikle bu özelliği yeni çıkan EF Core özelliklerini test edebilmek için kullanıyorum. 
+//Ben deniz(Gençay) genellikle bu özelliği yeni çıkan EF Core özelliklerini test edebilmek için kullanıyorum.
 //EF Core, fiziksel veritabanlarından ziyade in-memory'de Database oluşturup üzerinde birçok işlemi yapmamızı sağlayabilmektedir. İşte bu özellik ile gerçek uygulamaların dışında test gibi operasyonları hızlıca yürütebileceğimiz imkanlar elde edebilmekteyiz.
 #endregion
 #region Avantajları Nelerdir?
@@ -40,6 +39,7 @@ class Person
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseInMemoryDatabase("exampleDatabase");

@@ -1,7 +1,6 @@
-﻿
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 ApplicationDbContext context = new();
 
@@ -124,6 +123,7 @@ public class Person
 
     public virtual ICollection<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -132,23 +132,29 @@ public class Order
 
     public virtual Person Person { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Orders)
             .WithOne(o => o.Person)
             .HasForeignKey(o => o.PersonId);
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder
-            .UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True")
+            .UseSqlServer(
+                "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+            )
             .UseLazyLoadingProxies();
     }
 }

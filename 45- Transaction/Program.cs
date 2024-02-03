@@ -1,9 +1,8 @@
-﻿
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Metadata;
 using System.Transactions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 ApplicationDbContext context = new();
 #region Transaction Nedir?
@@ -12,7 +11,7 @@ ApplicationDbContext context = new();
 //Transaction'ın genel amacı veritabanındaki tutarlılık durumunu korumaktadır. Ya da bir başka deyişle verityabanındaki tutarsızlık durumlarına karşı önlem almaktır.
 #endregion
 #region Default Transaction Davranışı
-//EF Core'da varsayılan olarak, yapılan tüm işlemler SaveChanges fonksiyuyla veritabanına fiziksel olarak uygulanır. 
+//EF Core'da varsayılan olarak, yapılan tüm işlemler SaveChanges fonksiyuyla veritabanına fiziksel olarak uygulanır.
 //Çünkü SaveChanges default olarak bir trasncationa sahiptir.
 //Eğer ki bu süreçte bir problem/hata/başarısızlık durumu söz konusu olursa tüm işlemler geri alınır(rollback) ve işlemlerin hiçbiri veritabanına uygulanmaz.
 //Böylece SaveChanges tüm işlemlerin ya tamamen başarılı olacağını ya da bir hata oluşursa veritabanını değiştirmeden işlemleri sonlandıracağını ifade etmektedir.
@@ -39,24 +38,24 @@ ApplicationDbContext context = new();
 
 //Savepoints özelliği bir transaction içerisinde istenildiği kadar kullanılabilir.
 
-//IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
+IDbContextTransaction transaction = await context.Database.BeginTransactionAsync();
 
-//Person p13 = await context.Persons.FindAsync(13);
-//Person p11 = await context.Persons.FindAsync(11);
-//context.Persons.RemoveRange(p13, p11);
-//await context.SaveChangesAsync();
+Person p13 = await context.Persons.FindAsync(13);
+Person p11 = await context.Persons.FindAsync(11);
+context.Persons.RemoveRange(p13, p11);
+await context.SaveChangesAsync();
 
-//await transaction.CreateSavepointAsync("t1");
+await transaction.CreateSavepointAsync("t1");
 
-//Person p10 = await context.Persons.FindAsync(10);
-//context.Persons.Remove(p10);
-//await context.SaveChangesAsync();
+Person p10 = await context.Persons.FindAsync(10);
+context.Persons.Remove(p10);
+await context.SaveChangesAsync();
 
-//await transaction.RollbackToSavepointAsync("t1");
+await transaction.RollbackToSavepointAsync("t1");
 
-//await transaction.CommitAsync();
+await transaction.CommitAsync();
 #endregion
-#region TransactionScope  
+#region TransactionScope
 //veritabanı işlemlerini bir grup olarak yapmamızı sağlayan bir sınıfıtr.
 //ADO.NET ile de kullanılabilir.
 
@@ -79,6 +78,7 @@ public class Person
 
     public ICollection<Order> Orders { get; set; }
 }
+
 public class Order
 {
     public int OrderId { get; set; }
@@ -87,15 +87,18 @@ public class Order
 
     public Person Person { get; set; }
 }
+
 class ApplicationDbContext : DbContext
 {
     public DbSet<Person> Persons { get; set; }
     public DbSet<Order> Orders { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        modelBuilder.Entity<Person>()
+        modelBuilder
+            .Entity<Person>()
             .HasMany(p => p.Orders)
             .WithOne(o => o.Person)
             .HasForeignKey(o => o.PersonId);
@@ -103,6 +106,8 @@ class ApplicationDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=localhost, 1433;Database=ApplicationDB;User ID=SA;Password=1q2w3e4r+!;TrustServerCertificate=True"
+        );
     }
 }
