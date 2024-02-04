@@ -16,23 +16,19 @@ ApplicationDbContext context = new();
 //IQueryable hedef verileri getirirken, hedef verilerden daha fazlasını getirip in-memory'de ayıklar.
 
 #region IQueryable
-//var persons = await context.Persons.Where(p => p.Name.Contains("a"))
-//                             .Take(3)
-//                             .ToListAsync();
+var persons = await context.Persons.Where(p => p.Name.Contains("a")).Take(3).ToListAsync();
 
-
-//var persons = await context.Persons.Where(p => p.Name.Contains("a"))
-//                             .Where(p => p.PersonId > 3)
-//                             .Take(3)
-//                             .Skip(3)
-//                             .ToListAsync();
+var persons2 = await context
+    .Persons.Where(p => p.Name.Contains("a"))
+    .Where(p => p.PersonId > 3)
+    .Take(3)
+    .Skip(3)
+    .ToListAsync();
 
 #endregion
+
 #region IEnumerable
-//var persons = context.Persons.Where(p => p.Name.Contains("a"))
-//                             .AsEnumerable()
-//                             .Take(3)
-//                             .ToList();
+var persons3 = context.Persons.Where(p => p.Name.Contains("a")).AsEnumerable().Take(3).ToList();
 #endregion
 
 #region AsQueryable
@@ -44,65 +40,67 @@ ApplicationDbContext context = new();
 #endregion
 
 #region Yalnızca İhtiyaç Olan Kolonları Listeleyin - Select
-//var persons = await context.Persons.Select(p => new
-//{
-//    p.Name
-//}).ToListAsync();
+var persons4 = await context.Persons.Select(p => new { p.Name }).ToListAsync();
 #endregion
 
 #region Result'ı Limitleyin - Take
-//await context.Persons.Take(50).ToListAsync();
+await context.Persons.Take(50).ToListAsync();
 #endregion
 
 #region Join Sorgularında Eager Loading Sürecinde Verileri Filtreleyin
-//var persons = await context.Persons.Include(p => p.Orders
-//                                                  .Where(o => o.OrderId % 2 == 0)
-//                                                  .OrderByDescending(o => o.OrderId)
-//                                                  .Take(4))
-//    .ToListAsync();
+var persons5 = await context
+    .Persons.Include(
+        p => p.Orders.Where(o => o.OrderId % 2 == 0).OrderByDescending(o => o.OrderId).Take(4)
+    )
+    .ToListAsync();
 
-//foreach (var person in persons)
-//{
-//    var orders = person.Orders.Where(o => o.CreatedDate.Year == 2022);
-//}
+foreach (var person in persons5)
+{
+    var orders = person.Orders.Where(o => o.CreatedDate.Year == 2022);
+}
 
 #endregion
 
 #region Şartlara Bağlı Join Yapılacaksa Eğer Explicit Loading Kullanın
-//var person = await context.Persons.Include(p => p.Orders).FirstOrDefaultAsync(p => p.PersonId == 1);
-//var person = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == 1);
+var person1 = await context
+    .Persons.Include(p => p.Orders)
+    .FirstOrDefaultAsync(p => p.PersonId == 1);
+var person2 = await context.Persons.FirstOrDefaultAsync(p => p.PersonId == 1);
 
-//if (person.Name == "Ayşe")
-//{
-//    //Order'larını getir...
-//    await context.Entry(person).Collection(p => p.Orders).LoadAsync();
-//}
+if (person1.Name == "Ayşe")
+{
+    //Order'larını getir...
+    await context.Entry(person2).Collection(p => p.Orders).LoadAsync();
+}
 #endregion
 
 #region Lazy Loading Kullanırken Dikkatli Olun!
 #region Riskli Durum
-//var persons = await context.Persons.ToListAsync();
+var persons6 = await context.Persons.ToListAsync();
 
-//foreach (var person in persons)
-//{
-//    foreach (var order in person.Orders)
-//    {
-//        Console.WriteLine($"{person.Name} - {order.OrderId}");
-//    }
-//    Console.WriteLine("***********");
-//}
+foreach (var person in persons6)
+{
+    // Her seferinde Order'ları getirmek için sorgu çalıştırır
+    foreach (var order in person.Orders)
+    {
+        Console.WriteLine($"{person.Name} - {order.OrderId}");
+    }
+    Console.WriteLine("***********");
+}
 #endregion
-#region İdeal Durum
-//var persons = await context.Persons.Select(p => new { p.Name, p.Orders }).ToListAsync();
 
-//foreach (var person in persons)
-//{
-//    foreach (var order in person.Orders)
-//    {
-//        Console.WriteLine($"{person.Name} - {order.OrderId}");
-//    }
-//    Console.WriteLine("***********");
-//}
+#region İdeal Durum
+// Bir kerede orderlarıda getirir böylerce tek tek sorgu çalıştırmaz
+var persons7 = await context.Persons.Select(p => new { p.Name, p.Orders }).ToListAsync();
+
+foreach (var person in persons)
+{
+    foreach (var order in person.Orders)
+    {
+        Console.WriteLine($"{person.Name} - {order.OrderId}");
+    }
+    Console.WriteLine("***********");
+}
 #endregion
 #endregion
 
